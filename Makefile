@@ -16,7 +16,7 @@ init: generate
 	go mod vendor
 
 test:
-	go test -short -coverprofile coverage.out -v ./...
+	go test -timeout 30s -short -count=1 -race -cover -coverprofile coverage.out -v ./...
 
 generate: generated generate_mocks
 

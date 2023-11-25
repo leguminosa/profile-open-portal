@@ -23,7 +23,7 @@ func NewUserHandler(opts NewUserHandlerOptions) *UserHandler {
 	}
 }
 
-func (s *UserHandler) Register(c echo.Context) error {
+func (h *UserHandler) Register(c echo.Context) error {
 	var (
 		ctx     = c.Request().Context()
 		request = entity.RegisterAPIRequest{
@@ -38,7 +38,7 @@ func (s *UserHandler) Register(c echo.Context) error {
 	}
 
 	var result entity.RegisterModuleResponse
-	result, err = s.userModule.Register(ctx, entity.RegisterModuleRequest{
+	result, err = h.userModule.Register(ctx, entity.RegisterModuleRequest{
 		User: request.User,
 	})
 	if err != nil {
