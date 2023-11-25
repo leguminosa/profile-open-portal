@@ -8,6 +8,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestUser_Exist(t *testing.T) {
+	tests := []struct {
+		name string
+		user *User
+		want bool
+	}{
+		{
+			name: "user does not exist",
+			user: &User{
+				ID: 0,
+			},
+			want: false,
+		},
+		{
+			name: "user exists",
+			user: &User{
+				ID: 1,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.user.Exist()
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestUser_HashPassword(t *testing.T) {
 	tests := []struct {
 		name               string

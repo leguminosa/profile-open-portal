@@ -1,8 +1,11 @@
 package entity
 
-import "github.com/leguminosa/profile-open-portal/tools"
+import (
+	"github.com/leguminosa/profile-open-portal/tools"
+)
 
 type (
+	// User represents both users table and return value exposed as api object.
 	User struct {
 		ID             int    `json:"id"            db:"id"`
 		Fullname       string `json:"fullname"      db:"fullname"`
@@ -12,10 +15,12 @@ type (
 	}
 )
 
+// Exist returns true if user has been saved to database.
 func (u *User) Exist() bool {
 	return u.ID != 0
 }
 
+// HashPassword fills HashedPassword field using PlainPassword field.
 func (u *User) HashPassword(hash tools.HashInterface) error {
 	hashedPassword, err := hash.HashPassword(u.PlainPassword)
 	if err != nil {

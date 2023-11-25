@@ -1,4 +1,3 @@
-// This file contains the repository implementation layer.
 package user
 
 import (
@@ -16,6 +15,7 @@ type NewRepositoryOptions struct {
 	DB *sql.DB
 }
 
+// New returns a new instance of UserRepository.
 func New(opts NewRepositoryOptions) *UserRepository {
 	return &UserRepository{
 		db: opts.DB,

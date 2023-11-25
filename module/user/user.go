@@ -20,6 +20,7 @@ type NewUserModuleOptions struct {
 	Hash           tools.HashInterface
 }
 
+// New creates new user module.
 func New(opts NewUserModuleOptions) *UserModule {
 	return &UserModule{
 		userRepository: opts.UserRepository,
@@ -27,6 +28,7 @@ func New(opts NewUserModuleOptions) *UserModule {
 	}
 }
 
+// Register creates new user after validating the request.
 func (m *UserModule) Register(ctx context.Context, req entity.RegisterModuleRequest) (entity.RegisterModuleResponse, error) {
 	var (
 		resp = entity.RegisterModuleResponse{
@@ -79,6 +81,7 @@ var (
 	ErrLoginFailed = errors.New("phone number or password is not correct")
 )
 
+// Login generate jwt and increment success login count on successful attempt.
 func (m *UserModule) Login(ctx context.Context, req entity.LoginModuleRequest) (entity.LoginModuleResponse, error) {
 	var (
 		resp = entity.LoginModuleResponse{

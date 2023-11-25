@@ -1,5 +1,6 @@
 package validator
 
+// ValidatePhoneNumber validates phone number field based off certain criteria.
 func ValidatePhoneNumber(phoneNumber string) (messages []string, valid bool) {
 	messages = []string{}
 	valid = true
@@ -27,6 +28,7 @@ func ValidatePhoneNumber(phoneNumber string) (messages []string, valid bool) {
 	return
 }
 
+// ValidateFullName validates full name field based off certain criteria.
 func ValidateFullName(fullName string) (messages []string, valid bool) {
 	messages = []string{}
 	valid = true
@@ -40,6 +42,7 @@ func ValidateFullName(fullName string) (messages []string, valid bool) {
 	return
 }
 
+// ValidatePassword validates password field based off certain criteria.
 func ValidatePassword(password string) (messages []string, valid bool) {
 	messages = []string{}
 	valid = true
