@@ -34,7 +34,8 @@ func (h *UserHandler) Register(c echo.Context) error {
 
 	err := c.Bind(&request)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		response.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, response)
 	}
 
 	var result entity.RegisterModuleResponse
@@ -42,7 +43,8 @@ func (h *UserHandler) Register(c echo.Context) error {
 		User: request.User,
 	})
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		response.Message = err.Error()
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 	if !result.Valid {
 		response.Message = strings.Join(result.Messages, ", ")
