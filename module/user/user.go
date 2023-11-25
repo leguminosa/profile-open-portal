@@ -4,22 +4,25 @@ import (
 	"context"
 
 	"github.com/leguminosa/profile-open-portal/entity"
+	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
 	"github.com/leguminosa/profile-open-portal/pkg/validator"
 	"github.com/leguminosa/profile-open-portal/repository"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserModule struct {
 	userRepository repository.UserRepositoryInterface
+	hash           crxpto.HashInterface
 }
 
 type NewUserModuleOptions struct {
 	UserRepository repository.UserRepositoryInterface
+	Hash           crxpto.HashInterface
 }
 
 func New(opts NewUserModuleOptions) *UserModule {
 	return &UserModule{
 		userRepository: opts.UserRepository,
+		hash:           opts.Hash,
 	}
 }
 
@@ -56,12 +59,10 @@ func (m *UserModule) Register(ctx context.Context, req entity.RegisterModuleRequ
 	}
 
 	// hashing plain password before inserting to database
-	var hashedPassword []byte
-	hashedPassword, err = bcrypt.GenerateFromPassword([]byte(req.User.PlainPassword), bcrypt.DefaultCost)
+	err = req.User.HashPassword(m.hash)
 	if err != nil {
 		return resp, err
 	}
-	req.User.HashedPassword = string(hashedPassword)
 
 	resp.User.ID, err = m.userRepository.InsertUser(ctx, req.User)
 	if err != nil {

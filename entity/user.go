@@ -1,14 +1,30 @@
 package entity
 
+import (
+	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
+)
+
 type (
 	User struct {
-		ID             int    `json:"id" db:"id"`
-		Fullname       string `json:"fullname" db:"fullname"`
-		PhoneNumber    string `json:"phone_number" db:"phone_number"`
-		HashedPassword string `json:"-" db:"password"`
-		PlainPassword  string `json:"password" db:"-"`
+		ID             int    `json:"id"            db:"id"`
+		Fullname       string `json:"fullname"      db:"fullname"`
+		PhoneNumber    string `json:"phone_number"  db:"phone_number"`
+		HashedPassword string `json:"-"             db:"password"`
+		PlainPassword  string `json:"password"      db:"-"`
 	}
+)
 
+func (u *User) HashPassword(hash crxpto.HashInterface) error {
+	hashedPassword, err := hash.HashPassword(u.PlainPassword)
+	if err != nil {
+		return err
+	}
+	u.HashedPassword = string(hashedPassword)
+
+	return nil
+}
+
+type (
 	RegisterAPIRequest struct {
 		*User
 	}
@@ -16,7 +32,6 @@ type (
 		UserID  int    `json:"user_id,omitempty"`
 		Message string `json:"message,omitempty"`
 	}
-
 	RegisterModuleRequest struct {
 		User *User
 	}

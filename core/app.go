@@ -5,6 +5,7 @@ import (
 
 	"github.com/leguminosa/profile-open-portal/handler"
 	moduleUser "github.com/leguminosa/profile-open-portal/module/user"
+	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
 	repositoryUser "github.com/leguminosa/profile-open-portal/repository/user"
 )
 
@@ -13,6 +14,9 @@ type App struct {
 }
 
 func initApp(db *sql.DB) *App {
+	// pkg layer
+	hash := crxpto.NewBcrypt()
+
 	// repository layer
 	userRepo := repositoryUser.New(repositoryUser.NewRepositoryOptions{
 		DB: db,
@@ -21,6 +25,7 @@ func initApp(db *sql.DB) *App {
 	// module layer
 	userModule := moduleUser.New(moduleUser.NewUserModuleOptions{
 		UserRepository: userRepo,
+		Hash:           hash,
 	})
 
 	// handler layer

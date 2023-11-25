@@ -17,6 +17,7 @@ init: generate
 
 test:
 	go test -timeout 30s -short -count=1 -race -cover -coverprofile coverage.out -v ./...
+	@go tool cover -func coverage.out | grep -v ".mock.gen.go"
 
 generate: generated generate_mocks
 
