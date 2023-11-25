@@ -1,8 +1,6 @@
 package entity
 
-import (
-	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
-)
+import "github.com/leguminosa/profile-open-portal/tools"
 
 type (
 	User struct {
@@ -14,7 +12,7 @@ type (
 	}
 )
 
-func (u *User) HashPassword(hash crxpto.HashInterface) error {
+func (u *User) HashPassword(hash tools.HashInterface) error {
 	hashedPassword, err := hash.HashPassword(u.PlainPassword)
 	if err != nil {
 		return err

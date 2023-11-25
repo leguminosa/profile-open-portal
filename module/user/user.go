@@ -4,19 +4,19 @@ import (
 	"context"
 
 	"github.com/leguminosa/profile-open-portal/entity"
-	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
-	"github.com/leguminosa/profile-open-portal/pkg/validator"
 	"github.com/leguminosa/profile-open-portal/repository"
+	"github.com/leguminosa/profile-open-portal/tools"
+	"github.com/leguminosa/profile-open-portal/tools/validator"
 )
 
 type UserModule struct {
 	userRepository repository.UserRepositoryInterface
-	hash           crxpto.HashInterface
+	hash           tools.HashInterface
 }
 
 type NewUserModuleOptions struct {
 	UserRepository repository.UserRepositoryInterface
-	Hash           crxpto.HashInterface
+	Hash           tools.HashInterface
 }
 
 func New(opts NewUserModuleOptions) *UserModule {

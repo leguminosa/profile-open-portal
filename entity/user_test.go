@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
+	"github.com/leguminosa/profile-open-portal/tools"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +12,7 @@ func TestUser_HashPassword(t *testing.T) {
 	tests := []struct {
 		name               string
 		user               *User
-		prepare            func(m *crxpto.MockHashInterface)
+		prepare            func(m *tools.MockHashInterface)
 		wantHashedPassword string
 		wantErr            bool
 	}{
@@ -21,7 +21,7 @@ func TestUser_HashPassword(t *testing.T) {
 			user: &User{
 				PlainPassword: "abcde",
 			},
-			prepare: func(m *crxpto.MockHashInterface) {
+			prepare: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("abcde").Return(nil, assert.AnError)
 			},
 			wantHashedPassword: "",
@@ -32,7 +32,7 @@ func TestUser_HashPassword(t *testing.T) {
 			user: &User{
 				PlainPassword: "abcde",
 			},
-			prepare: func(m *crxpto.MockHashInterface) {
+			prepare: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("abcde").Return([]byte("hashed abcde"), nil)
 			},
 			wantHashedPassword: "hashed abcde",
@@ -41,7 +41,7 @@ func TestUser_HashPassword(t *testing.T) {
 	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockHash := crxpto.NewMockHashInterface(ctrl)
+	mockHash := tools.NewMockHashInterface(ctrl)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.prepare != nil {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/leguminosa/profile-open-portal/entity"
-	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
 	"github.com/leguminosa/profile-open-portal/repository"
+	"github.com/leguminosa/profile-open-portal/tools"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +28,7 @@ func TestUserModule_Register(t *testing.T) {
 	tests := []struct {
 		name        string
 		req         entity.RegisterModuleRequest
-		prepareHash func(m *crxpto.MockHashInterface)
+		prepareHash func(m *tools.MockHashInterface)
 		prepareRepo func(m *repository.MockUserRepositoryInterface)
 		want        entity.RegisterModuleResponse
 		wantErr     bool
@@ -113,7 +113,7 @@ func TestUserModule_Register(t *testing.T) {
 					PlainPassword: "Abcde3#",
 				},
 			},
-			prepareHash: func(m *crxpto.MockHashInterface) {
+			prepareHash: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("Abcde3#").Return(nil, assert.AnError)
 			},
 			want: entity.RegisterModuleResponse{
@@ -137,7 +137,7 @@ func TestUserModule_Register(t *testing.T) {
 					PlainPassword: "Abcde3#",
 				},
 			},
-			prepareHash: func(m *crxpto.MockHashInterface) {
+			prepareHash: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("Abcde3#").Return([]byte("hashed something"), nil)
 			},
 			prepareRepo: func(m *repository.MockUserRepositoryInterface) {
@@ -169,7 +169,7 @@ func TestUserModule_Register(t *testing.T) {
 					PlainPassword: "Abcde3#",
 				},
 			},
-			prepareHash: func(m *crxpto.MockHashInterface) {
+			prepareHash: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("Abcde3#").Return([]byte("hashed something"), nil)
 			},
 			prepareRepo: func(m *repository.MockUserRepositoryInterface) {
@@ -196,7 +196,7 @@ func TestUserModule_Register(t *testing.T) {
 	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockHash := crxpto.NewMockHashInterface(ctrl)
+	mockHash := tools.NewMockHashInterface(ctrl)
 	mockUserRepo := repository.NewMockUserRepositoryInterface(ctrl)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

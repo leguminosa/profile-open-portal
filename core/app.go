@@ -5,8 +5,8 @@ import (
 
 	"github.com/leguminosa/profile-open-portal/handler"
 	moduleUser "github.com/leguminosa/profile-open-portal/module/user"
-	"github.com/leguminosa/profile-open-portal/pkg/crxpto"
 	repositoryUser "github.com/leguminosa/profile-open-portal/repository/user"
+	"github.com/leguminosa/profile-open-portal/tools/crxpto"
 )
 
 type App struct {
@@ -14,7 +14,7 @@ type App struct {
 }
 
 func initApp(db *sql.DB) *App {
-	// pkg layer
+	// tools layer
 	hash := crxpto.NewBcrypt()
 
 	// repository layer
