@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"errors"
 
 	"github.com/leguminosa/profile-open-portal/entity"
 	"github.com/leguminosa/profile-open-portal/repository"
@@ -70,5 +71,43 @@ func (m *UserModule) Register(ctx context.Context, req entity.RegisterModuleRequ
 	}
 
 	resp.Valid = true
+	return resp, nil
+}
+
+var (
+	// ErrLoginFailed obscures the error message to prevent brute force attack
+	ErrLoginFailed = errors.New("phone number or password is not correct")
+)
+
+func (m *UserModule) Login(ctx context.Context, req entity.LoginModuleRequest) (entity.LoginModuleResponse, error) {
+	var (
+		resp = entity.LoginModuleResponse{
+			User: &entity.User{},
+		}
+		err error
+	)
+
+	// get user from database
+	resp.User, err = m.userRepository.GetUserByPhoneNumber(ctx, req.PhoneNumber)
+	if err != nil {
+		return resp, ErrLoginFailed
+	}
+
+	// check whether user with requested phone number exist in database
+	if !resp.User.Exist() {
+		return resp, ErrLoginFailed
+	}
+
+	// compare hashed password stored in database with user input
+	err = m.hash.ComparePassword([]byte(resp.User.HashedPassword), req.Password)
+	if err != nil {
+		return resp, ErrLoginFailed
+	}
+
+	// TODO: generate jwt
+	resp.JWT = "mocked jwt"
+
+	// TODO: increment success login count
+
 	return resp, nil
 }

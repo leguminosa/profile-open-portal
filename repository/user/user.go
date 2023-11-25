@@ -22,6 +22,32 @@ func New(opts NewRepositoryOptions) *UserRepository {
 	}
 }
 
+// GetUserByPhoneNumber returns a single user because phone number is stored unqiuely.
+func (r *UserRepository) GetUserByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.User, error) {
+	var user = &entity.User{}
+
+	query := `
+		SELECT
+			id,
+			fullname,
+			phone_number,
+			password
+		FROM users
+		WHERE phone_number = $1;
+	`
+	err := r.db.QueryRowContext(ctx, query, phoneNumber).Scan(
+		&user.ID,
+		&user.Fullname,
+		&user.PhoneNumber,
+		&user.HashedPassword,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 // InsertUser inserts a new user to database, returning its id on success.
 func (r *UserRepository) InsertUser(ctx context.Context, user *entity.User) (int, error) {
 	tx, err := r.db.BeginTx(ctx, nil)

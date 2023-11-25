@@ -35,6 +35,21 @@ func (m *MockUserRepositoryInterface) EXPECT() *MockUserRepositoryInterfaceMockR
 	return m.recorder
 }
 
+// GetUserByPhoneNumber mocks base method.
+func (m *MockUserRepositoryInterface) GetUserByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByPhoneNumber", ctx, phoneNumber)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByPhoneNumber indicates an expected call of GetUserByPhoneNumber.
+func (mr *MockUserRepositoryInterfaceMockRecorder) GetUserByPhoneNumber(ctx, phoneNumber interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByPhoneNumber", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetUserByPhoneNumber), ctx, phoneNumber)
+}
+
 // InsertUser mocks base method.
 func (m *MockUserRepositoryInterface) InsertUser(ctx context.Context, user *entity.User) (int, error) {
 	m.ctrl.T.Helper()

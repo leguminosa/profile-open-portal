@@ -11,6 +11,6 @@ CREATE TABLE users (
     id              SERIAL      not null
         primary key,
     fullname        VARCHAR     not null,
-    phone_number    VARCHAR     not null,
+    phone_number    VARCHAR     not null    unique,
     password        TEXT        not null
 );

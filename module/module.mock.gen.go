@@ -35,6 +35,21 @@ func (m *MockUserModuleInterface) EXPECT() *MockUserModuleInterfaceMockRecorder 
 	return m.recorder
 }
 
+// Login mocks base method.
+func (m *MockUserModuleInterface) Login(ctx context.Context, req entity.LoginModuleRequest) (entity.LoginModuleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Login", ctx, req)
+	ret0, _ := ret[0].(entity.LoginModuleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Login indicates an expected call of Login.
+func (mr *MockUserModuleInterfaceMockRecorder) Login(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserModuleInterface)(nil).Login), ctx, req)
+}
+
 // Register mocks base method.
 func (m *MockUserModuleInterface) Register(ctx context.Context, req entity.RegisterModuleRequest) (entity.RegisterModuleResponse, error) {
 	m.ctrl.T.Helper()

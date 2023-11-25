@@ -54,3 +54,31 @@ func (h *UserHandler) Register(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *UserHandler) Login(c echo.Context) error {
+	var (
+		ctx      = c.Request().Context()
+		request  = entity.LoginAPIRequest{}
+		response entity.LoginAPIResponse
+	)
+
+	err := c.Bind(&request)
+	if err != nil {
+		response.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	var result entity.LoginModuleResponse
+	result, err = h.userModule.Login(ctx, entity.LoginModuleRequest{
+		PhoneNumber: request.PhoneNumber,
+		Password:    request.Password,
+	})
+	if err != nil {
+		response.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	response.UserID = result.User.ID
+	response.JWT = result.JWT
+
+	return c.JSON(http.StatusOK, response)
+}

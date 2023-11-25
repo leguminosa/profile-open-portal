@@ -12,6 +12,10 @@ type (
 	}
 )
 
+func (u *User) Exist() bool {
+	return u.ID != 0
+}
+
 func (u *User) HashPassword(hash tools.HashInterface) error {
 	hashedPassword, err := hash.HashPassword(u.PlainPassword)
 	if err != nil {
@@ -37,5 +41,25 @@ type (
 		Valid    bool
 		Messages []string
 		User     *User
+	}
+)
+
+type (
+	LoginAPIRequest struct {
+		PhoneNumber string `json:"phone_number"`
+		Password    string `json:"password"`
+	}
+	LoginAPIResponse struct {
+		UserID  int    `json:"user_id,omitempty"`
+		JWT     string `json:"jwt,omitempty"`
+		Message string `json:"message,omitempty"`
+	}
+	LoginModuleRequest struct {
+		PhoneNumber string
+		Password    string
+	}
+	LoginModuleResponse struct {
+		User *User
+		JWT  string
 	}
 )

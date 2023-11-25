@@ -17,3 +17,7 @@ func NewBcrypt() *Bcrypt {
 func (b *Bcrypt) HashPassword(password string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(password), b.cost)
 }
+
+func (b *Bcrypt) ComparePassword(hashedPassword []byte, password string) error {
+	return bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+}

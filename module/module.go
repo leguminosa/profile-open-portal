@@ -10,4 +10,5 @@ import (
 
 type UserModuleInterface interface {
 	Register(ctx context.Context, req entity.RegisterModuleRequest) (entity.RegisterModuleResponse, error)
+	Login(ctx context.Context, req entity.LoginModuleRequest) (entity.LoginModuleResponse, error)
 }
