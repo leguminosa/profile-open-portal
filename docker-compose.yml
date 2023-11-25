@@ -16,6 +16,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: database
+      TZ: Asia/Jakarta
+      PGTZ: Asia/Jakarta
     ports:
       - 5432:5432
     expose:

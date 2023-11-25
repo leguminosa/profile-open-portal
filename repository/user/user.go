@@ -31,7 +31,10 @@ func (r *UserRepository) GetUserByPhoneNumber(ctx context.Context, phoneNumber s
 			id,
 			fullname,
 			phone_number,
-			password
+			password,
+			login_count,
+			created_at,
+			COALESCE(updated_at, created_at) AS updated_at
 		FROM users
 		WHERE phone_number = $1;
 	`
@@ -40,6 +43,9 @@ func (r *UserRepository) GetUserByPhoneNumber(ctx context.Context, phoneNumber s
 		&user.Fullname,
 		&user.PhoneNumber,
 		&user.HashedPassword,
+		&user.LoginCount,
+		&user.CreatedAt,
+		&user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -88,4 +94,36 @@ func (r *UserRepository) InsertUser(ctx context.Context, user *entity.User) (int
 	}
 
 	return user.ID, nil
+}
+
+// IncrementLoginCount adds the value by 1 each time user logged in successfully.
+func (r *UserRepository) IncrementLoginCount(ctx context.Context, userID int) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	query := `
+		UPDATE users
+		SET
+			login_count = login_count + 1,
+			updated_at = now()
+		WHERE id = $1;
+	`
+	_, err = r.db.ExecContext(ctx, query, userID)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

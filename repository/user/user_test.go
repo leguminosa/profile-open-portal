@@ -4,6 +4,7 @@ package user
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/leguminosa/profile-open-portal/entity"
@@ -49,11 +50,17 @@ func TestUserRepository_GetUserByPhoneNumber(t *testing.T) {
 						"fullname",
 						"phone_number",
 						"password",
+						"login_count",
+						"created_at",
+						"updated_at",
 					}).AddRow(
 						1,
 						"John Doe",
 						"628123456789",
 						"hashed-password",
+						0,
+						time.Date(2023, 8, 5, 12, 35, 51, 900, time.UTC),
+						time.Date(2023, 8, 5, 12, 35, 51, 900, time.UTC),
 					))
 			},
 			want: &entity.User{
@@ -61,6 +68,9 @@ func TestUserRepository_GetUserByPhoneNumber(t *testing.T) {
 				Fullname:       "John Doe",
 				PhoneNumber:    "628123456789",
 				HashedPassword: "hashed-password",
+				LoginCount:     0,
+				CreatedAt:      time.Date(2023, 8, 5, 12, 35, 51, 900, time.UTC),
+				UpdatedAt:      time.Date(2023, 8, 5, 12, 35, 51, 900, time.UTC),
 			},
 			wantErr: false,
 		},
@@ -108,6 +118,7 @@ func TestUserRepository_InsertUser(t *testing.T) {
 			prepare: func(m sqlmock.Sqlmock) {
 				m.ExpectBegin().WillReturnError(nil)
 				m.ExpectQuery(`INSERT INTO users.*`).WillReturnError(assert.AnError)
+				m.ExpectRollback().WillReturnError(nil)
 			},
 			wantErr: true,
 		},
@@ -119,6 +130,7 @@ func TestUserRepository_InsertUser(t *testing.T) {
 				m.ExpectQuery(`INSERT INTO users.*`).
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 				m.ExpectCommit().WillReturnError(assert.AnError)
+				m.ExpectRollback().WillReturnError(nil)
 			},
 			wantErr: true,
 		},
@@ -151,6 +163,70 @@ func TestUserRepository_InsertUser(t *testing.T) {
 			got, err := r.InsertUser(ctx, tt.user)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestUserRepository_IncrementLoginCount(t *testing.T) {
+	ctx := context.Background()
+	r := &UserRepository{}
+	tests := []struct {
+		name    string
+		userID  int
+		prepare func(m sqlmock.Sqlmock)
+		wantErr bool
+	}{
+		{
+			name: "error begin tx",
+			prepare: func(m sqlmock.Sqlmock) {
+				m.ExpectBegin().WillReturnError(assert.AnError)
+			},
+			wantErr: true,
+		},
+		{
+			name: "error exec context",
+			prepare: func(m sqlmock.Sqlmock) {
+				m.ExpectBegin().WillReturnError(nil)
+				m.ExpectExec(`UPDATE users.*`).WillReturnError(assert.AnError)
+				m.ExpectRollback().WillReturnError(nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "error commit",
+			prepare: func(m sqlmock.Sqlmock) {
+				m.ExpectBegin().WillReturnError(nil)
+				m.ExpectExec(`UPDATE users.*`).WillReturnResult(sqlmock.NewResult(0, 1))
+				m.ExpectCommit().WillReturnError(assert.AnError)
+				m.ExpectRollback().WillReturnError(nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "success",
+			prepare: func(m sqlmock.Sqlmock) {
+				m.ExpectBegin().WillReturnError(nil)
+				m.ExpectExec(`UPDATE users.*`).WillReturnResult(sqlmock.NewResult(0, 1))
+				m.ExpectCommit().WillReturnError(nil)
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDB, mockSQL, err := sqlmock.New()
+			if err != nil {
+				t.Error(err)
+			}
+			defer mockDB.Close()
+
+			if tt.prepare != nil {
+				tt.prepare(mockSQL)
+			}
+			r.db = mockDB
+
+			err = r.IncrementLoginCount(ctx, tt.userID)
+			assert.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 }

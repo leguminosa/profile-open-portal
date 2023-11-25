@@ -50,6 +50,20 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) GetUserByPhoneNumber(ctx, pho
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByPhoneNumber", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetUserByPhoneNumber), ctx, phoneNumber)
 }
 
+// IncrementLoginCount mocks base method.
+func (m *MockUserRepositoryInterface) IncrementLoginCount(ctx context.Context, userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncrementLoginCount", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncrementLoginCount indicates an expected call of IncrementLoginCount.
+func (mr *MockUserRepositoryInterfaceMockRecorder) IncrementLoginCount(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrementLoginCount", reflect.TypeOf((*MockUserRepositoryInterface)(nil).IncrementLoginCount), ctx, userID)
+}
+
 // InsertUser mocks base method.
 func (m *MockUserRepositoryInterface) InsertUser(ctx context.Context, user *entity.User) (int, error) {
 	m.ctrl.T.Helper()

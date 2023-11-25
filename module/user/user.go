@@ -110,7 +110,10 @@ func (m *UserModule) Login(ctx context.Context, req entity.LoginModuleRequest) (
 	// TODO: generate jwt
 	resp.JWT = "mocked jwt"
 
-	// TODO: increment success login count
+	err = m.userRepository.IncrementLoginCount(ctx, resp.User.ID)
+	if err != nil {
+		return resp, ErrLoginFailed
+	}
 
 	return resp, nil
 }

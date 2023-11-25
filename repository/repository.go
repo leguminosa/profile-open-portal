@@ -11,4 +11,5 @@ import (
 type UserRepositoryInterface interface {
 	GetUserByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.User, error)
 	InsertUser(ctx context.Context, user *entity.User) (int, error)
+	IncrementLoginCount(ctx context.Context, userID int) error
 }
