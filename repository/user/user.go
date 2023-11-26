@@ -144,7 +144,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *entity.User) erro
 		UPDATE users
 		SET
 			fullname = $1,
-			phone_number = $2
+			phone_number = $2,
 			updated_at = now()
 		WHERE id = $3;
 	`
