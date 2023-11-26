@@ -1,6 +1,6 @@
 
 
-.PHONY: clean all init generate generate_mocks
+.PHONY: clean all jwt init generate generate_mocks
 
 all: build/main
 
@@ -11,9 +11,14 @@ build/main: cmd/main.go generated
 clean:
 	rm -rf generated
 
-init: generate
+init: generate jwt
 	go mod tidy
 	go mod vendor
+
+jwt:
+	@echo "Generating rsa..."
+	openssl genrsa -out jwt.pem 4096
+	openssl rsa -in jwt.pem -pubout -outform PEM -out jwt_pub.pem
 
 test:
 	go test -timeout 30s -short -count=1 -race -cover -coverprofile coverage.out -v ./...

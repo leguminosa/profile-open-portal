@@ -5,6 +5,8 @@ services:
       - "8080:1323"
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/database?sslmode=disable
+      PRIVATE_KEY_PATH: /etc/app/jwt.pem
+      PUBLIC_KEY_PATH: /etc/app/jwt_pub.pem
     depends_on:
       db:
         condition: service_healthy

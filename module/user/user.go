@@ -13,11 +13,13 @@ import (
 type UserModule struct {
 	userRepository repository.UserRepositoryInterface
 	hash           tools.HashInterface
+	jwt            tools.JWTInterface
 }
 
 type NewUserModuleOptions struct {
 	UserRepository repository.UserRepositoryInterface
 	Hash           tools.HashInterface
+	JWT            tools.JWTInterface
 }
 
 // New creates new user module.
@@ -25,6 +27,7 @@ func New(opts NewUserModuleOptions) *UserModule {
 	return &UserModule{
 		userRepository: opts.UserRepository,
 		hash:           opts.Hash,
+		jwt:            opts.JWT,
 	}
 }
 
@@ -107,8 +110,10 @@ func (m *UserModule) Login(ctx context.Context, user *entity.User) (entity.Login
 		return resp, ErrLoginFailed
 	}
 
-	// TODO: generate jwt
-	resp.JWT = "mocked jwt"
+	resp.JWT, err = m.jwt.Generate(resp.User)
+	if err != nil {
+		return resp, ErrLoginFailed
+	}
 
 	err = m.userRepository.IncrementLoginCount(ctx, resp.User.ID)
 	if err != nil {

@@ -26,5 +26,8 @@ go.work
 # Build
 build
 
+# Certificate files
+*.pem
+
 # Generated
 generated

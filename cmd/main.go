@@ -18,6 +18,21 @@ func main() {
 		panic(err)
 	}
 
+	// get private and public key path from environment variable
+	privateKeyPath := os.Getenv("PRIVATE_KEY_PATH")
+	publicKeyPath := os.Getenv("PUBLIC_KEY_PATH")
+
+	// read private and public key from file
+	var privKey, pubKey []byte
+	privKey, err = os.ReadFile(privateKeyPath)
+	if err != nil {
+		panic(err)
+	}
+	pubKey, err = os.ReadFile(publicKeyPath)
+	if err != nil {
+		panic(err)
+	}
+
 	// init http server
-	core.NewServer(db).Start()
+	core.NewServer(db, privKey, pubKey).Start()
 }

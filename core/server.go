@@ -17,10 +17,12 @@ type Server struct {
 
 func NewServer(
 	db *sql.DB,
+	privKey []byte,
+	pubKey []byte,
 ) ServerInterface {
 	server := &Server{
 		echo: echo.New(),
-		app:  initApp(db),
+		app:  initApp(db, privKey, pubKey),
 	}
 	registerMiddleware(server.echo)
 	registerHandler(server.echo, server.app)
