@@ -24,6 +24,7 @@ type (
 		echo.Context
 
 		mockBind func(i interface{}) error
+		mockGet  func(key string) interface{}
 	}
 )
 
@@ -49,6 +50,13 @@ func (m *mockEchoContext) getResponseBody() []byte {
 func (m *mockEchoContext) Bind(i interface{}) error {
 	if m.mockBind != nil {
 		return m.mockBind(i)
+	}
+	return nil
+}
+
+func (m *mockEchoContext) Get(key string) interface{} {
+	if m.mockGet != nil {
+		return m.mockGet(key)
 	}
 	return nil
 }

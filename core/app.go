@@ -6,12 +6,15 @@ import (
 	"github.com/leguminosa/profile-open-portal/handler"
 	moduleUser "github.com/leguminosa/profile-open-portal/module/user"
 	repositoryUser "github.com/leguminosa/profile-open-portal/repository/user"
+	"github.com/leguminosa/profile-open-portal/tools"
+	"github.com/leguminosa/profile-open-portal/tools/auth"
 	"github.com/leguminosa/profile-open-portal/tools/crxpto"
 	"github.com/leguminosa/profile-open-portal/tools/jwtx"
 )
 
 type App struct {
 	*handler.UserHandler
+	auth tools.AuthInterface
 }
 
 func initApp(
@@ -24,6 +27,9 @@ func initApp(
 	jwtClient := jwtx.NewSigningMethodRS256(jwtx.NewSigningMethodRS256Options{
 		PrivateKey: privKey,
 		PublicKey:  pubKey,
+	})
+	authClient := auth.New(auth.NewAuthOptions{
+		JWT: jwtClient,
 	})
 
 	// repository layer
@@ -45,5 +51,6 @@ func initApp(
 
 	return &App{
 		UserHandler: userHandler,
+		auth:        authClient,
 	}
 }

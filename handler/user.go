@@ -54,7 +54,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 		user = &entity.User{}
 	)
 
-	err := c.Bind(&user)
+	err := c.Bind(user)
 	if err != nil {
 		return helper.BadRequest(c, err.Error())
 	}
@@ -68,5 +68,45 @@ func (h *UserHandler) Login(c echo.Context) error {
 	return helper.OK(c, map[string]interface{}{
 		"user_id": result.User.ID,
 		"jwt":     result.JWT,
+	})
+}
+
+func (h *UserHandler) GetProfile(c echo.Context) error {
+	var (
+		ctx    = c.Request().Context()
+		userID = helper.UserIDFromContext(c)
+	)
+
+	result, err := h.userModule.GetProfile(ctx, userID)
+	if err != nil {
+		return helper.Forbidden(c, err.Error())
+	}
+
+	return helper.OK(c, map[string]interface{}{
+		"fullname":     result.Fullname,
+		"phone_number": result.PhoneNumber,
+	})
+}
+
+func (h *UserHandler) UpdateProfile(c echo.Context) error {
+	var (
+		ctx    = c.Request().Context()
+		user   = &entity.User{}
+		userID = helper.UserIDFromContext(c)
+	)
+
+	err := c.Bind(user)
+	if err != nil {
+		return helper.BadRequest(c, err.Error())
+	}
+	user.ID = userID
+
+	err = h.userModule.UpdateProfile(ctx, user)
+	if err != nil {
+		return helper.Forbidden(c, err.Error())
+	}
+
+	return helper.OK(c, map[string]interface{}{
+		"message": "OK",
 	})
 }
