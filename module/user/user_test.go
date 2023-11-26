@@ -472,6 +472,7 @@ func TestUserModule_UpdateProfile(t *testing.T) {
 		name    string
 		user    *entity.User
 		prepare func(m *repository.MockUserRepositoryInterface)
+		want    entity.UpdateProfileModuleResponse
 		wantErr bool
 	}{
 		{
@@ -493,8 +494,9 @@ func TestUserModule_UpdateProfile(t *testing.T) {
 		{
 			name: "error update user",
 			user: &entity.User{
-				ID:       1,
-				Fullname: "John Doe Updated",
+				ID:          1,
+				Fullname:    "John Doe Updated",
+				PhoneNumber: "62899123123",
 			},
 			prepare: func(m *repository.MockUserRepositoryInterface) {
 				m.EXPECT().GetUserByID(ctx, 1).Return(&entity.User{
@@ -503,14 +505,41 @@ func TestUserModule_UpdateProfile(t *testing.T) {
 					PhoneNumber:    "62812345678",
 					HashedPassword: "hashed something",
 				}, nil)
+				m.EXPECT().GetUserByPhoneNumber(ctx, "62899123123").Return(nil, assert.AnError)
 				m.EXPECT().UpdateUser(ctx, &entity.User{
 					ID:             1,
 					Fullname:       "John Doe Updated",
-					PhoneNumber:    "62812345678",
+					PhoneNumber:    "62899123123",
 					HashedPassword: "hashed something",
 				}).Return(assert.AnError)
 			},
 			wantErr: true,
+		},
+		{
+			name: "conflicting phone number",
+			user: &entity.User{
+				ID:          1,
+				PhoneNumber: "62899123123",
+			},
+			prepare: func(m *repository.MockUserRepositoryInterface) {
+				m.EXPECT().GetUserByID(ctx, 1).Return(&entity.User{
+					ID:             1,
+					Fullname:       "John Doe",
+					PhoneNumber:    "62812345678",
+					HashedPassword: "hashed something",
+				}, nil)
+				m.EXPECT().GetUserByPhoneNumber(ctx, "62899123123").Return(&entity.User{
+					ID:             2,
+					Fullname:       "John Doe 2",
+					PhoneNumber:    "62899123123",
+					HashedPassword: "hashed something",
+				}, nil)
+			},
+			want: entity.UpdateProfileModuleResponse{
+				Conflict: true,
+				Message:  "phone number already exist",
+			},
+			wantErr: false,
 		},
 		{
 			name: "success",
@@ -526,6 +555,7 @@ func TestUserModule_UpdateProfile(t *testing.T) {
 					PhoneNumber:    "62812345678",
 					HashedPassword: "hashed something",
 				}, nil)
+				m.EXPECT().GetUserByPhoneNumber(ctx, "62899123123").Return(&entity.User{}, nil)
 				m.EXPECT().UpdateUser(ctx, &entity.User{
 					ID:             1,
 					Fullname:       "John Doe Updated",
@@ -546,8 +576,62 @@ func TestUserModule_UpdateProfile(t *testing.T) {
 			}
 			m.userRepository = mockUserRepo
 
-			err := m.UpdateProfile(ctx, tt.user)
+			got, err := m.UpdateProfile(ctx, tt.user)
 			assert.Equal(t, tt.wantErr, err != nil)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestUserModule_isPhoneNumberExist(t *testing.T) {
+	ctx := context.Background()
+	m := &UserModule{}
+	tests := []struct {
+		name        string
+		phoneNumber string
+		prepare     func(m *repository.MockUserRepositoryInterface)
+		want        bool
+	}{
+		{
+			name:        "error get user",
+			phoneNumber: "62812345678",
+			prepare: func(m *repository.MockUserRepositoryInterface) {
+				m.EXPECT().GetUserByPhoneNumber(ctx, "62812345678").Return(nil, assert.AnError)
+			},
+			want: false,
+		},
+		{
+			name:        "user does not exist",
+			phoneNumber: "62812345678",
+			prepare: func(m *repository.MockUserRepositoryInterface) {
+				m.EXPECT().GetUserByPhoneNumber(ctx, "62812345678").Return(&entity.User{}, nil)
+			},
+			want: false,
+		},
+		{
+			name:        "user exist",
+			phoneNumber: "62812345678",
+			prepare: func(m *repository.MockUserRepositoryInterface) {
+				m.EXPECT().GetUserByPhoneNumber(ctx, "62812345678").Return(&entity.User{
+					ID:          1,
+					PhoneNumber: "62812345678",
+				}, nil)
+			},
+			want: true,
+		},
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockUserRepo := repository.NewMockUserRepositoryInterface(ctrl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.prepare != nil {
+				tt.prepare(mockUserRepo)
+			}
+			m.userRepository = mockUserRepo
+
+			got := m.isPhoneNumberExist(ctx, tt.phoneNumber)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

@@ -22,6 +22,12 @@ func Forbidden(c echo.Context, message string) error {
 	})
 }
 
+func Conflict(c echo.Context, message string) error {
+	return JSON(c, http.StatusConflict, map[string]interface{}{
+		"message": message,
+	})
+}
+
 func InternalServerError(c echo.Context, message string) error {
 	return JSON(c, http.StatusInternalServerError, map[string]interface{}{
 		"message": message,

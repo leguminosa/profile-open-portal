@@ -28,6 +28,10 @@ type (
 		User *User
 		JWT  string
 	}
+	UpdateProfileModuleResponse struct {
+		Conflict bool
+		Message  string
+	}
 )
 
 // Exist returns true if user has been saved to database.

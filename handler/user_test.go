@@ -357,9 +357,39 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 					ID:          15,
 					Fullname:    "John Doe Updated",
 					PhoneNumber: "628123456799",
-				}).Return(assert.AnError)
+				}).Return(entity.UpdateProfileModuleResponse{}, assert.AnError)
 			},
 			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
+			wantErr: false,
+		},
+		{
+			name: "conflicting phone number",
+			mockCtx: &mockEchoContext{
+				mockBind: func(i interface{}) error {
+					switch v := i.(type) {
+					case *entity.User:
+						if v != nil {
+							v.Fullname = "John Doe Updated"
+							v.PhoneNumber = "628123456799"
+						}
+					}
+					return nil
+				},
+				mockGet: func(key string) interface{} {
+					return 15
+				},
+			},
+			prepare: func(m *module.MockUserModuleInterface) {
+				m.EXPECT().UpdateProfile(mockCtx.Request().Context(), &entity.User{
+					ID:          15,
+					Fullname:    "John Doe Updated",
+					PhoneNumber: "628123456799",
+				}).Return(entity.UpdateProfileModuleResponse{
+					Conflict: true,
+					Message:  "phone number already exist",
+				}, nil)
+			},
+			want:    "{\"message\":\"phone number already exist\"}\n",
 			wantErr: false,
 		},
 		{
@@ -384,9 +414,9 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 					ID:          15,
 					Fullname:    "John Doe Updated",
 					PhoneNumber: "628123456799",
-				}).Return(nil)
+				}).Return(entity.UpdateProfileModuleResponse{}, nil)
 			},
-			want:    "{\"message\":\"OK\"}\n",
+			want:    "{\"user_id\":15}\n",
 			wantErr: false,
 		},
 	}

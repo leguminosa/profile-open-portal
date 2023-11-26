@@ -129,24 +129,41 @@ func (m *UserModule) GetProfile(ctx context.Context, userID int) (*entity.User, 
 }
 
 // UpdateProfile only updates fullname and/or phone number if user input is not empty.
-func (m *UserModule) UpdateProfile(ctx context.Context, user *entity.User) error {
-	// get user to db first to check whether user exist
-	exist, err := m.userRepository.GetUserByID(ctx, user.ID)
+func (m *UserModule) UpdateProfile(ctx context.Context, user *entity.User) (entity.UpdateProfileModuleResponse, error) {
+	var resp entity.UpdateProfileModuleResponse
+
+	// get user to db first to check whether user currentValue
+	currentValue, err := m.userRepository.GetUserByID(ctx, user.ID)
 	if err != nil {
-		return err
+		return resp, err
 	}
 
-	if !exist.Exist() {
-		return errors.New("user not found")
+	if !currentValue.Exist() {
+		return resp, errors.New("user not found")
 	}
 
 	// only update if user input is not empty
 	if user.Fullname != "" {
-		exist.Fullname = user.Fullname
+		currentValue.Fullname = user.Fullname
 	}
 	if user.PhoneNumber != "" {
-		exist.PhoneNumber = user.PhoneNumber
+		resp.Conflict = m.isPhoneNumberExist(ctx, user.PhoneNumber)
+		currentValue.PhoneNumber = user.PhoneNumber
 	}
 
-	return m.userRepository.UpdateUser(ctx, exist)
+	if resp.Conflict {
+		// don't update if phone number already exist
+		resp.Message = "phone number already exist"
+		return resp, nil
+	}
+
+	return resp, m.userRepository.UpdateUser(ctx, currentValue)
+}
+
+func (m *UserModule) isPhoneNumberExist(ctx context.Context, phoneNumber string) bool {
+	user, err := m.userRepository.GetUserByPhoneNumber(ctx, phoneNumber)
+	if err != nil {
+		return false
+	}
+	return user.Exist()
 }

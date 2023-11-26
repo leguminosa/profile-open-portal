@@ -101,12 +101,16 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 	}
 	user.ID = userID
 
-	err = h.userModule.UpdateProfile(ctx, user)
+	var result entity.UpdateProfileModuleResponse
+	result, err = h.userModule.UpdateProfile(ctx, user)
 	if err != nil {
 		return helper.Forbidden(c, err.Error())
 	}
+	if result.Conflict {
+		return helper.Conflict(c, result.Message)
+	}
 
 	return helper.OK(c, map[string]interface{}{
-		"message": "OK",
+		"user_id": user.ID,
 	})
 }

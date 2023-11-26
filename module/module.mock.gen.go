@@ -81,11 +81,12 @@ func (mr *MockUserModuleInterfaceMockRecorder) Register(ctx, user interface{}) *
 }
 
 // UpdateProfile mocks base method.
-func (m *MockUserModuleInterface) UpdateProfile(ctx context.Context, user *entity.User) error {
+func (m *MockUserModuleInterface) UpdateProfile(ctx context.Context, user *entity.User) (entity.UpdateProfileModuleResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProfile", ctx, user)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(entity.UpdateProfileModuleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateProfile indicates an expected call of UpdateProfile.

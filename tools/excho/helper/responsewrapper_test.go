@@ -92,6 +92,34 @@ func TestForbidden(t *testing.T) {
 	}
 }
 
+func TestConflict(t *testing.T) {
+	c := newMockEchoContext(nil)
+	tests := []struct {
+		name    string
+		message string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "success",
+			message: "conflicted",
+			want:    "{\"message\":\"conflicted\"}\n",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Conflict(c, tt.message)
+			if !assert.Equal(t, tt.wantErr, err != nil) {
+				return
+			}
+
+			got := c.getResponseBody()
+			assert.Equal(t, tt.want, string(got))
+		})
+	}
+}
+
 func TestInternalServerError(t *testing.T) {
 	c := newMockEchoContext(nil)
 	tests := []struct {
