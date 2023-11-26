@@ -36,31 +36,31 @@ func (m *MockUserModuleInterface) EXPECT() *MockUserModuleInterfaceMockRecorder 
 }
 
 // Login mocks base method.
-func (m *MockUserModuleInterface) Login(ctx context.Context, req entity.LoginModuleRequest) (entity.LoginModuleResponse, error) {
+func (m *MockUserModuleInterface) Login(ctx context.Context, user *entity.User) (entity.LoginModuleResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", ctx, req)
+	ret := m.ctrl.Call(m, "Login", ctx, user)
 	ret0, _ := ret[0].(entity.LoginModuleResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Login indicates an expected call of Login.
-func (mr *MockUserModuleInterfaceMockRecorder) Login(ctx, req interface{}) *gomock.Call {
+func (mr *MockUserModuleInterfaceMockRecorder) Login(ctx, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserModuleInterface)(nil).Login), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserModuleInterface)(nil).Login), ctx, user)
 }
 
 // Register mocks base method.
-func (m *MockUserModuleInterface) Register(ctx context.Context, req entity.RegisterModuleRequest) (entity.RegisterModuleResponse, error) {
+func (m *MockUserModuleInterface) Register(ctx context.Context, user *entity.User) (entity.RegisterModuleResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Register", ctx, req)
+	ret := m.ctrl.Call(m, "Register", ctx, user)
 	ret0, _ := ret[0].(entity.RegisterModuleResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Register indicates an expected call of Register.
-func (mr *MockUserModuleInterfaceMockRecorder) Register(ctx, req interface{}) *gomock.Call {
+func (mr *MockUserModuleInterfaceMockRecorder) Register(ctx, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUserModuleInterface)(nil).Register), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUserModuleInterface)(nil).Register), ctx, user)
 }

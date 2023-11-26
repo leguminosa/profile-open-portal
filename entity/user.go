@@ -17,7 +17,16 @@ type (
 		CreatedAt      time.Time `json:"-"              db:"created_at"`
 		UpdatedAt      time.Time `json:"-"              db:"updated_at"`
 
-		PlainPassword string `json:"password" db:"-"`
+		PlainPassword string `json:"password,omitempty" db:"-"`
+	}
+	RegisterModuleResponse struct {
+		User     *User
+		Valid    bool
+		Messages []string
+	}
+	LoginModuleResponse struct {
+		User *User
+		JWT  string
 	}
 )
 
@@ -36,41 +45,3 @@ func (u *User) HashPassword(hash tools.HashInterface) error {
 
 	return nil
 }
-
-type (
-	RegisterAPIRequest struct {
-		*User
-	}
-	RegisterAPIResponse struct {
-		UserID  int    `json:"user_id,omitempty"`
-		Message string `json:"message,omitempty"`
-	}
-	RegisterModuleRequest struct {
-		User *User
-	}
-	RegisterModuleResponse struct {
-		Valid    bool
-		Messages []string
-		User     *User
-	}
-)
-
-type (
-	LoginAPIRequest struct {
-		PhoneNumber string `json:"phone_number"`
-		Password    string `json:"password"`
-	}
-	LoginAPIResponse struct {
-		UserID  int    `json:"user_id,omitempty"`
-		JWT     string `json:"jwt,omitempty"`
-		Message string `json:"message,omitempty"`
-	}
-	LoginModuleRequest struct {
-		PhoneNumber string
-		Password    string
-	}
-	LoginModuleResponse struct {
-		User *User
-		JWT  string
-	}
-)

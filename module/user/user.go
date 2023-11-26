@@ -29,12 +29,12 @@ func New(opts NewUserModuleOptions) *UserModule {
 }
 
 // Register creates new user after validating the request.
-func (m *UserModule) Register(ctx context.Context, req entity.RegisterModuleRequest) (entity.RegisterModuleResponse, error) {
+func (m *UserModule) Register(ctx context.Context, user *entity.User) (entity.RegisterModuleResponse, error) {
 	var (
 		resp = entity.RegisterModuleResponse{
+			User:     user,
 			Valid:    true,
 			Messages: []string{},
-			User:     req.User,
 		}
 		err error
 	)
@@ -44,15 +44,15 @@ func (m *UserModule) Register(ctx context.Context, req entity.RegisterModuleRequ
 		messages []string
 		valid    bool
 	)
-	if messages, valid = validator.ValidatePhoneNumber(req.User.PhoneNumber); !valid {
+	if messages, valid = validator.ValidatePhoneNumber(user.PhoneNumber); !valid {
 		resp.Valid = false
 		resp.Messages = append(resp.Messages, messages...)
 	}
-	if messages, valid = validator.ValidateFullName(req.User.Fullname); !valid {
+	if messages, valid = validator.ValidateFullName(user.Fullname); !valid {
 		resp.Valid = false
 		resp.Messages = append(resp.Messages, messages...)
 	}
-	if messages, valid = validator.ValidatePassword(req.User.PlainPassword); !valid {
+	if messages, valid = validator.ValidatePassword(user.PlainPassword); !valid {
 		resp.Valid = false
 		resp.Messages = append(resp.Messages, messages...)
 	}
@@ -62,12 +62,12 @@ func (m *UserModule) Register(ctx context.Context, req entity.RegisterModuleRequ
 	}
 
 	// hashing plain password before inserting to database
-	err = req.User.HashPassword(m.hash)
+	err = user.HashPassword(m.hash)
 	if err != nil {
 		return resp, err
 	}
 
-	resp.User.ID, err = m.userRepository.InsertUser(ctx, req.User)
+	resp.User.ID, err = m.userRepository.InsertUser(ctx, user)
 	if err != nil {
 		return resp, err
 	}
@@ -82,16 +82,16 @@ var (
 )
 
 // Login generate jwt and increment success login count on successful attempt.
-func (m *UserModule) Login(ctx context.Context, req entity.LoginModuleRequest) (entity.LoginModuleResponse, error) {
+func (m *UserModule) Login(ctx context.Context, user *entity.User) (entity.LoginModuleResponse, error) {
 	var (
 		resp = entity.LoginModuleResponse{
-			User: &entity.User{},
+			User: user,
 		}
 		err error
 	)
 
 	// get user from database
-	resp.User, err = m.userRepository.GetUserByPhoneNumber(ctx, req.PhoneNumber)
+	resp.User, err = m.userRepository.GetUserByPhoneNumber(ctx, user.PhoneNumber)
 	if err != nil {
 		return resp, ErrLoginFailed
 	}
@@ -102,7 +102,7 @@ func (m *UserModule) Login(ctx context.Context, req entity.LoginModuleRequest) (
 	}
 
 	// compare hashed password stored in database with user input
-	err = m.hash.ComparePassword([]byte(resp.User.HashedPassword), req.Password)
+	err = m.hash.ComparePassword([]byte(resp.User.HashedPassword), user.PlainPassword)
 	if err != nil {
 		return resp, ErrLoginFailed
 	}

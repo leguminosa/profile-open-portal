@@ -27,7 +27,7 @@ func TestUserModule_Register(t *testing.T) {
 	m := &UserModule{}
 	tests := []struct {
 		name        string
-		req         entity.RegisterModuleRequest
+		user        *entity.User
 		prepareHash func(m *tools.MockHashInterface)
 		prepareRepo func(m *repository.MockUserRepositoryInterface)
 		want        entity.RegisterModuleResponse
@@ -35,12 +35,10 @@ func TestUserModule_Register(t *testing.T) {
 	}{
 		{
 			name: "request is empty",
-			req: entity.RegisterModuleRequest{
-				User: &entity.User{
-					Fullname:      "",
-					PhoneNumber:   "",
-					PlainPassword: "",
-				},
+			user: &entity.User{
+				Fullname:      "",
+				PhoneNumber:   "",
+				PlainPassword: "",
 			},
 			want: entity.RegisterModuleResponse{
 				Valid: false,
@@ -61,12 +59,10 @@ func TestUserModule_Register(t *testing.T) {
 		},
 		{
 			name: "invalid phone number",
-			req: entity.RegisterModuleRequest{
-				User: &entity.User{
-					Fullname:      "John Doe",
-					PhoneNumber:   "123456",
-					PlainPassword: "Abcde3#",
-				},
+			user: &entity.User{
+				Fullname:      "John Doe",
+				PhoneNumber:   "123456",
+				PlainPassword: "Abcde3#",
 			},
 			want: entity.RegisterModuleResponse{
 				Valid: false,
@@ -84,12 +80,10 @@ func TestUserModule_Register(t *testing.T) {
 		},
 		{
 			name: "invalid full name",
-			req: entity.RegisterModuleRequest{
-				User: &entity.User{
-					Fullname:      "Jo",
-					PhoneNumber:   "62812345678",
-					PlainPassword: "Abcde3#",
-				},
+			user: &entity.User{
+				Fullname:      "Jo",
+				PhoneNumber:   "62812345678",
+				PlainPassword: "Abcde3#",
 			},
 			want: entity.RegisterModuleResponse{
 				Valid: false,
@@ -106,12 +100,10 @@ func TestUserModule_Register(t *testing.T) {
 		},
 		{
 			name: "error hash password",
-			req: entity.RegisterModuleRequest{
-				User: &entity.User{
-					Fullname:      "John Doe",
-					PhoneNumber:   "62812345678",
-					PlainPassword: "Abcde3#",
-				},
+			user: &entity.User{
+				Fullname:      "John Doe",
+				PhoneNumber:   "62812345678",
+				PlainPassword: "Abcde3#",
 			},
 			prepareHash: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("Abcde3#").Return(nil, assert.AnError)
@@ -130,12 +122,10 @@ func TestUserModule_Register(t *testing.T) {
 		},
 		{
 			name: "error insert user",
-			req: entity.RegisterModuleRequest{
-				User: &entity.User{
-					Fullname:      "John Doe",
-					PhoneNumber:   "62812345678",
-					PlainPassword: "Abcde3#",
-				},
+			user: &entity.User{
+				Fullname:      "John Doe",
+				PhoneNumber:   "62812345678",
+				PlainPassword: "Abcde3#",
 			},
 			prepareHash: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("Abcde3#").Return([]byte("hashed something"), nil)
@@ -162,12 +152,10 @@ func TestUserModule_Register(t *testing.T) {
 		},
 		{
 			name: "success",
-			req: entity.RegisterModuleRequest{
-				User: &entity.User{
-					Fullname:      "John Doe",
-					PhoneNumber:   "62812345678",
-					PlainPassword: "Abcde3#",
-				},
+			user: &entity.User{
+				Fullname:      "John Doe",
+				PhoneNumber:   "62812345678",
+				PlainPassword: "Abcde3#",
 			},
 			prepareHash: func(m *tools.MockHashInterface) {
 				m.EXPECT().HashPassword("Abcde3#").Return([]byte("hashed something"), nil)
@@ -210,7 +198,7 @@ func TestUserModule_Register(t *testing.T) {
 			}
 			m.userRepository = mockUserRepo
 
-			got, err := m.Register(ctx, tt.req)
+			got, err := m.Register(ctx, tt.user)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.want, got)
 		})

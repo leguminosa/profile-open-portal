@@ -44,23 +44,21 @@ func TestUserHandler_Register(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.RegisterAPIRequest:
-						v.User = &entity.User{
-							Fullname:      "John Doe",
-							PhoneNumber:   "628123456789",
-							PlainPassword: "Abcde9!",
+					case *entity.User:
+						if v != nil {
+							v.Fullname = "John Doe"
+							v.PhoneNumber = "628123456789"
+							v.PlainPassword = "Abcde9!"
 						}
 					}
 					return nil
 				},
 			},
 			prepare: func(m *module.MockUserModuleInterface) {
-				m.EXPECT().Register(gomock.Any(), entity.RegisterModuleRequest{
-					User: &entity.User{
-						Fullname:      "John Doe",
-						PhoneNumber:   "628123456789",
-						PlainPassword: "Abcde9!",
-					},
+				m.EXPECT().Register(mockCtx.Request().Context(), &entity.User{
+					Fullname:      "John Doe",
+					PhoneNumber:   "628123456789",
+					PlainPassword: "Abcde9!",
 				}).Return(entity.RegisterModuleResponse{}, assert.AnError)
 			},
 			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
@@ -71,23 +69,21 @@ func TestUserHandler_Register(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.RegisterAPIRequest:
-						v.User = &entity.User{
-							Fullname:      "John Doe",
-							PhoneNumber:   "6212345",
-							PlainPassword: "Abcde9!",
+					case *entity.User:
+						if v != nil {
+							v.Fullname = "John Doe"
+							v.PhoneNumber = "6212345"
+							v.PlainPassword = "Abcde9!"
 						}
 					}
 					return nil
 				},
 			},
 			prepare: func(m *module.MockUserModuleInterface) {
-				m.EXPECT().Register(mockCtx.Request().Context(), entity.RegisterModuleRequest{
-					User: &entity.User{
-						Fullname:      "John Doe",
-						PhoneNumber:   "6212345",
-						PlainPassword: "Abcde9!",
-					},
+				m.EXPECT().Register(mockCtx.Request().Context(), &entity.User{
+					Fullname:      "John Doe",
+					PhoneNumber:   "6212345",
+					PlainPassword: "Abcde9!",
 				}).Return(entity.RegisterModuleResponse{
 					Valid:    false,
 					Messages: []string{"phone number must be 10-13 digits"},
@@ -106,23 +102,21 @@ func TestUserHandler_Register(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.RegisterAPIRequest:
-						v.User = &entity.User{
-							Fullname:      "John Doe",
-							PhoneNumber:   "628123456789",
-							PlainPassword: "Abcde9!",
+					case *entity.User:
+						if v != nil {
+							v.Fullname = "John Doe"
+							v.PhoneNumber = "628123456789"
+							v.PlainPassword = "Abcde9!"
 						}
 					}
 					return nil
 				},
 			},
 			prepare: func(m *module.MockUserModuleInterface) {
-				m.EXPECT().Register(mockCtx.Request().Context(), entity.RegisterModuleRequest{
-					User: &entity.User{
-						Fullname:      "John Doe",
-						PhoneNumber:   "628123456789",
-						PlainPassword: "Abcde9!",
-					},
+				m.EXPECT().Register(mockCtx.Request().Context(), &entity.User{
+					Fullname:      "John Doe",
+					PhoneNumber:   "628123456789",
+					PlainPassword: "Abcde9!",
 				}).Return(entity.RegisterModuleResponse{
 					Valid: true,
 					User: &entity.User{

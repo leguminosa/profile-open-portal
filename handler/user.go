@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/leguminosa/profile-open-portal/entity"
 	"github.com/leguminosa/profile-open-portal/module"
+	"github.com/leguminosa/profile-open-portal/tools/excho/helper"
 )
 
 type UserHandler struct {
@@ -25,60 +25,48 @@ func NewUserHandler(opts NewUserHandlerOptions) *UserHandler {
 
 func (h *UserHandler) Register(c echo.Context) error {
 	var (
-		ctx     = c.Request().Context()
-		request = entity.RegisterAPIRequest{
-			User: &entity.User{},
-		}
-		response entity.RegisterAPIResponse
+		ctx  = c.Request().Context()
+		user = &entity.User{}
 	)
 
-	err := c.Bind(&request)
+	err := c.Bind(user)
 	if err != nil {
-		response.Message = err.Error()
-		return c.JSON(http.StatusBadRequest, response)
+		return helper.BadRequest(c, err.Error())
 	}
 
 	var result entity.RegisterModuleResponse
-	result, err = h.userModule.Register(ctx, entity.RegisterModuleRequest{
-		User: request.User,
-	})
+	result, err = h.userModule.Register(ctx, user)
 	if err != nil {
-		response.Message = err.Error()
-		return c.JSON(http.StatusInternalServerError, response)
+		return helper.InternalServerError(c, err.Error())
 	}
 	if !result.Valid {
-		response.Message = strings.Join(result.Messages, ", ")
-		return c.JSON(http.StatusBadRequest, response)
+		return helper.BadRequest(c, strings.Join(result.Messages, ", "))
 	}
-	response.UserID = result.User.ID
 
-	return c.JSON(http.StatusOK, response)
+	return helper.OK(c, map[string]interface{}{
+		"user_id": result.User.ID,
+	})
 }
 
 func (h *UserHandler) Login(c echo.Context) error {
 	var (
-		ctx      = c.Request().Context()
-		request  = entity.LoginAPIRequest{}
-		response entity.LoginAPIResponse
+		ctx  = c.Request().Context()
+		user = &entity.User{}
 	)
 
-	err := c.Bind(&request)
+	err := c.Bind(&user)
 	if err != nil {
-		response.Message = err.Error()
-		return c.JSON(http.StatusBadRequest, response)
+		return helper.BadRequest(c, err.Error())
 	}
 
 	var result entity.LoginModuleResponse
-	result, err = h.userModule.Login(ctx, entity.LoginModuleRequest{
-		PhoneNumber: request.PhoneNumber,
-		Password:    request.Password,
-	})
+	result, err = h.userModule.Login(ctx, user)
 	if err != nil {
-		response.Message = err.Error()
-		return c.JSON(http.StatusBadRequest, response)
+		return helper.BadRequest(c, err.Error())
 	}
-	response.UserID = result.User.ID
-	response.JWT = result.JWT
 
-	return c.JSON(http.StatusOK, response)
+	return helper.OK(c, map[string]interface{}{
+		"user_id": result.User.ID,
+		"jwt":     result.JWT,
+	})
 }
