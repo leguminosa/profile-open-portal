@@ -8,47 +8,200 @@
 #
 # References
 # 1. https://swagger.io/specification/
-openapi: "3.0.0"
+openapi: 3.0.0
 info:
   version: 1.0.0
   title: User Service
+  description: Small API to manage users
   license:
     name: MIT
 servers:
-  - url: http://localhost
+  - url: http://localhost:8080
+    description: Containerized development environment
 paths:
-  /hello:
-    get:
-      summary: This is just a test endpoint to get you started. Please delete this endpoint.
-      operationId: hello
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
+  /register:
+    post:
+      summary: Creates a new user.
+      description: Validates all fullname, phone number, and password before creating the user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
         '200':
-          description: Test return
+          description: User created
           content:
-            application/json:    
+            application/json:
               schema:
-                $ref: "#/components/schemas/HelloResponse"
-        '404':
-          description: Not found
+                $ref: "#/components/schemas/RegisterResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /login:
+    post:
+      summary: Creates a session for the user.
+      description: Returns jwt if phone number and password are valid.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        '200':
+          description: User logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /v1/profile:
+    get:
+      summary: Get User Profile
+      description: Get profile of the user that is currently logged in.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetProfileResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      summary: Update logged on user's profile
+      description: Update both fullname and phone number if not empty. Phone number can't be duplicate.
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateProfileResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '409':
+          description: Conflicted phone number
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
-    HelloResponse:
+    RegisterRequest:
       type: object
       required:
-        - message
+        - fullname
+        - phone_number
+        - password
       properties:
-        message:
+        fullname:
           type: string
+        phone_number:
+          type: string
+        password:
+          type: string
+          format: password
+    RegisterResponse:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: integer
+          format: int64
+    LoginRequest:
+      type: object
+      required:
+        - phone_number
+        - password
+      properties:
+        phone_number:
+          type: string
+        password:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      required:
+        - user_id
+        - jwt
+      properties:
+        user_id:
+          type: integer
+          format: int64
+        jwt:
+          type: string
+    GetProfileResponse:
+      type: object
+      required:
+        - fullname
+        - phone_number
+      properties:
+        fullname:
+          type: string
+        phone_number:
+          type: string
+    UpdateProfileRequest:
+      type: object
+      required:
+        - fullname
+        - phone_number
+      properties:
+        fullname:
+          type: string
+        phone_number:
+          type: string
+    UpdateProfileResponse:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: integer
+          format: int64
     ErrorResponse:
       type: object
       required:
@@ -56,3 +209,5 @@ components:
       properties:
         message:
           type: string
+security:
+  - bearerAuth: []

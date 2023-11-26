@@ -5,23 +5,14 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/leguminosa/profile-open-portal/entity"
+	"github.com/leguminosa/profile-open-portal/generated"
 	"github.com/leguminosa/profile-open-portal/module"
+	"github.com/leguminosa/profile-open-portal/tools"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewUserHandler(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockUserModule := module.NewMockUserModuleInterface(ctrl)
-
-	assert.NotEmpty(t, NewUserHandler(NewUserHandlerOptions{
-		UserModule: mockUserModule,
-	}))
-}
-
-func TestUserHandler_Register(t *testing.T) {
-	h := &UserHandler{}
+func TestServer_PostLogin(t *testing.T) {
+	s := &Server{}
 	tests := []struct {
 		name    string
 		mockCtx *mockEchoContext
@@ -44,11 +35,109 @@ func TestUserHandler_Register(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.User:
+					case *generated.LoginRequest:
+						if v != nil {
+							v.PhoneNumber = "628123456789"
+							v.Password = "Abcde9!"
+						}
+					}
+					return nil
+				},
+			},
+			prepare: func(m *module.MockUserModuleInterface) {
+				m.EXPECT().Login(mockCtx.Request().Context(), &entity.User{
+					PhoneNumber:   "628123456789",
+					PlainPassword: "Abcde9!",
+				}).Return(entity.LoginModuleResponse{}, assert.AnError)
+			},
+			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
+			wantErr: false,
+		},
+		{
+			name: "success",
+			mockCtx: &mockEchoContext{
+				mockBind: func(i interface{}) error {
+					switch v := i.(type) {
+					case *generated.LoginRequest:
+						if v != nil {
+							v.PhoneNumber = "628123456789"
+							v.Password = "Abcde9!"
+						}
+					}
+					return nil
+				},
+			},
+			prepare: func(m *module.MockUserModuleInterface) {
+				m.EXPECT().Login(mockCtx.Request().Context(), &entity.User{
+					PhoneNumber:   "628123456789",
+					PlainPassword: "Abcde9!",
+				}).Return(entity.LoginModuleResponse{
+					User: &entity.User{
+						ID:             1,
+						Fullname:       "John Doe",
+						PhoneNumber:    "628123456789",
+						PlainPassword:  "Abcde9!",
+						HashedPassword: "hashed Abcde9!",
+					},
+					JWT: "some-jwt",
+				}, nil)
+			},
+			want:    "{\"jwt\":\"some-jwt\",\"user_id\":1}\n",
+			wantErr: false,
+		},
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockUserModule := module.NewMockUserModuleInterface(ctrl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := newMockEchoContext(tt.mockCtx)
+
+			if tt.prepare != nil {
+				tt.prepare(mockUserModule)
+			}
+			s.UserModule = mockUserModule
+
+			err := s.PostLogin(c)
+			if !assert.Equal(t, tt.wantErr, err != nil) {
+				return
+			}
+
+			got := c.getResponseBody()
+			assert.Equal(t, tt.want, string(got))
+		})
+	}
+}
+
+func TestServer_PostRegister(t *testing.T) {
+	s := &Server{}
+	tests := []struct {
+		name    string
+		mockCtx *mockEchoContext
+		prepare func(m *module.MockUserModuleInterface)
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "error bind",
+			mockCtx: &mockEchoContext{
+				mockBind: func(i interface{}) error {
+					return assert.AnError
+				},
+			},
+			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
+			wantErr: false,
+		},
+		{
+			name: "error register",
+			mockCtx: &mockEchoContext{
+				mockBind: func(i interface{}) error {
+					switch v := i.(type) {
+					case *generated.RegisterRequest:
 						if v != nil {
 							v.Fullname = "John Doe"
 							v.PhoneNumber = "628123456789"
-							v.PlainPassword = "Abcde9!"
+							v.Password = "Abcde9!"
 						}
 					}
 					return nil
@@ -69,11 +158,11 @@ func TestUserHandler_Register(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.User:
+					case *generated.RegisterRequest:
 						if v != nil {
 							v.Fullname = "John Doe"
 							v.PhoneNumber = "6212345"
-							v.PlainPassword = "Abcde9!"
+							v.Password = "Abcde9!"
 						}
 					}
 					return nil
@@ -102,11 +191,11 @@ func TestUserHandler_Register(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.User:
+					case *generated.RegisterRequest:
 						if v != nil {
 							v.Fullname = "John Doe"
 							v.PhoneNumber = "628123456789"
-							v.PlainPassword = "Abcde9!"
+							v.Password = "Abcde9!"
 						}
 					}
 					return nil
@@ -142,9 +231,9 @@ func TestUserHandler_Register(t *testing.T) {
 			if tt.prepare != nil {
 				tt.prepare(mockUserModule)
 			}
-			h.userModule = mockUserModule
+			s.UserModule = mockUserModule
 
-			err := h.Register(c)
+			err := s.PostRegister(c)
 			if !assert.Equal(t, tt.wantErr, err != nil) {
 				return
 			}
@@ -155,119 +244,33 @@ func TestUserHandler_Register(t *testing.T) {
 	}
 }
 
-func TestUserHandler_Login(t *testing.T) {
-	h := &UserHandler{}
+func TestServer_GetV1Profile(t *testing.T) {
+	s := &Server{}
 	tests := []struct {
-		name    string
-		mockCtx *mockEchoContext
-		prepare func(m *module.MockUserModuleInterface)
-		want    string
-		wantErr bool
+		name        string
+		mockCtx     *mockEchoContext
+		prepareAuth func(m *tools.MockAuthInterface)
+		prepare     func(m *module.MockUserModuleInterface)
+		want        string
+		wantErr     bool
 	}{
 		{
-			name: "error bind",
-			mockCtx: &mockEchoContext{
-				mockBind: func(i interface{}) error {
-					return assert.AnError
-				},
+			name: "error authenticate",
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(assert.AnError)
 			},
 			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
 			wantErr: false,
 		},
-		{
-			name: "error register",
-			mockCtx: &mockEchoContext{
-				mockBind: func(i interface{}) error {
-					switch v := i.(type) {
-					case *entity.User:
-						if v != nil {
-							v.PhoneNumber = "628123456789"
-							v.PlainPassword = "Abcde9!"
-						}
-					}
-					return nil
-				},
-			},
-			prepare: func(m *module.MockUserModuleInterface) {
-				m.EXPECT().Login(mockCtx.Request().Context(), &entity.User{
-					PhoneNumber:   "628123456789",
-					PlainPassword: "Abcde9!",
-				}).Return(entity.LoginModuleResponse{}, assert.AnError)
-			},
-			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
-			wantErr: false,
-		},
-		{
-			name: "success",
-			mockCtx: &mockEchoContext{
-				mockBind: func(i interface{}) error {
-					switch v := i.(type) {
-					case *entity.User:
-						if v != nil {
-							v.PhoneNumber = "628123456789"
-							v.PlainPassword = "Abcde9!"
-						}
-					}
-					return nil
-				},
-			},
-			prepare: func(m *module.MockUserModuleInterface) {
-				m.EXPECT().Login(mockCtx.Request().Context(), &entity.User{
-					PhoneNumber:   "628123456789",
-					PlainPassword: "Abcde9!",
-				}).Return(entity.LoginModuleResponse{
-					User: &entity.User{
-						ID:             1,
-						Fullname:       "John Doe",
-						PhoneNumber:    "628123456789",
-						PlainPassword:  "Abcde9!",
-						HashedPassword: "hashed Abcde9!",
-					},
-					JWT: "some-jwt",
-				}, nil)
-			},
-			want:    "{\"jwt\":\"some-jwt\",\"user_id\":1}\n",
-			wantErr: false,
-		},
-	}
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockUserModule := module.NewMockUserModuleInterface(ctrl)
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := newMockEchoContext(tt.mockCtx)
-
-			if tt.prepare != nil {
-				tt.prepare(mockUserModule)
-			}
-			h.userModule = mockUserModule
-
-			err := h.Login(c)
-			if !assert.Equal(t, tt.wantErr, err != nil) {
-				return
-			}
-
-			got := c.getResponseBody()
-			assert.Equal(t, tt.want, string(got))
-		})
-	}
-}
-
-func TestUserHandler_GetProfile(t *testing.T) {
-	h := &UserHandler{}
-	tests := []struct {
-		name    string
-		mockCtx *mockEchoContext
-		prepare func(m *module.MockUserModuleInterface)
-		want    string
-		wantErr bool
-	}{
 		{
 			name: "error get profile",
 			mockCtx: &mockEchoContext{
 				mockGet: func(key string) interface{} {
 					return 91
 				},
+			},
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(nil)
 			},
 			prepare: func(m *module.MockUserModuleInterface) {
 				m.EXPECT().GetProfile(mockCtx.Request().Context(), 91).Return(nil, assert.AnError)
@@ -282,6 +285,9 @@ func TestUserHandler_GetProfile(t *testing.T) {
 					return 15
 				},
 			},
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(nil)
+			},
 			prepare: func(m *module.MockUserModuleInterface) {
 				m.EXPECT().GetProfile(mockCtx.Request().Context(), 15).Return(&entity.User{
 					ID:          15,
@@ -295,17 +301,23 @@ func TestUserHandler_GetProfile(t *testing.T) {
 	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	mockAuth := tools.NewMockAuthInterface(ctrl)
 	mockUserModule := module.NewMockUserModuleInterface(ctrl)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := newMockEchoContext(tt.mockCtx)
 
+			if tt.prepareAuth != nil {
+				tt.prepareAuth(mockAuth)
+			}
+			s.Auth = mockAuth
+
 			if tt.prepare != nil {
 				tt.prepare(mockUserModule)
 			}
-			h.userModule = mockUserModule
+			s.UserModule = mockUserModule
 
-			err := h.GetProfile(c)
+			err := s.GetV1Profile(c)
 			if !assert.Equal(t, tt.wantErr, err != nil) {
 				return
 			}
@@ -316,21 +328,33 @@ func TestUserHandler_GetProfile(t *testing.T) {
 	}
 }
 
-func TestUserHandler_UpdateProfile(t *testing.T) {
-	h := &UserHandler{}
+func TestServer_PutV1Profile(t *testing.T) {
+	s := &Server{}
 	tests := []struct {
-		name    string
-		mockCtx *mockEchoContext
-		prepare func(m *module.MockUserModuleInterface)
-		want    string
-		wantErr bool
+		name        string
+		mockCtx     *mockEchoContext
+		prepareAuth func(m *tools.MockAuthInterface)
+		prepare     func(m *module.MockUserModuleInterface)
+		want        string
+		wantErr     bool
 	}{
+		{
+			name: "error authenticate",
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(assert.AnError)
+			},
+			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
+			wantErr: false,
+		},
 		{
 			name: "error bind",
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					return assert.AnError
 				},
+			},
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(nil)
 			},
 			want:    "{\"message\":\"assert.AnError general error for testing\"}\n",
 			wantErr: false,
@@ -340,7 +364,7 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.User:
+					case *generated.UpdateProfileRequest:
 						if v != nil {
 							v.Fullname = "John Doe Updated"
 							v.PhoneNumber = "628123456799"
@@ -351,6 +375,9 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 				mockGet: func(key string) interface{} {
 					return 15
 				},
+			},
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(nil)
 			},
 			prepare: func(m *module.MockUserModuleInterface) {
 				m.EXPECT().UpdateProfile(mockCtx.Request().Context(), &entity.User{
@@ -367,7 +394,7 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.User:
+					case *generated.UpdateProfileRequest:
 						if v != nil {
 							v.Fullname = "John Doe Updated"
 							v.PhoneNumber = "628123456799"
@@ -378,6 +405,9 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 				mockGet: func(key string) interface{} {
 					return 15
 				},
+			},
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(nil)
 			},
 			prepare: func(m *module.MockUserModuleInterface) {
 				m.EXPECT().UpdateProfile(mockCtx.Request().Context(), &entity.User{
@@ -397,7 +427,7 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 			mockCtx: &mockEchoContext{
 				mockBind: func(i interface{}) error {
 					switch v := i.(type) {
-					case *entity.User:
+					case *generated.UpdateProfileRequest:
 						if v != nil {
 							v.Fullname = "John Doe Updated"
 							v.PhoneNumber = "628123456799"
@@ -408,6 +438,9 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 				mockGet: func(key string) interface{} {
 					return 15
 				},
+			},
+			prepareAuth: func(m *tools.MockAuthInterface) {
+				m.EXPECT().Authenticate(gomock.Any()).Return(nil)
 			},
 			prepare: func(m *module.MockUserModuleInterface) {
 				m.EXPECT().UpdateProfile(mockCtx.Request().Context(), &entity.User{
@@ -422,17 +455,23 @@ func TestUserHandler_UpdateProfile(t *testing.T) {
 	}
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	mockAuth := tools.NewMockAuthInterface(ctrl)
 	mockUserModule := module.NewMockUserModuleInterface(ctrl)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := newMockEchoContext(tt.mockCtx)
 
+			if tt.prepareAuth != nil {
+				tt.prepareAuth(mockAuth)
+			}
+			s.Auth = mockAuth
+
 			if tt.prepare != nil {
 				tt.prepare(mockUserModule)
 			}
-			h.userModule = mockUserModule
+			s.UserModule = mockUserModule
 
-			err := h.UpdateProfile(c)
+			err := s.PutV1Profile(c)
 			if !assert.Equal(t, tt.wantErr, err != nil) {
 				return
 			}

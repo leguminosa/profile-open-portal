@@ -3,8 +3,8 @@
 
 # Include only required files and folders
 !cmd
-!core
 !entity
+!generated
 !handler
 !module
 !repository

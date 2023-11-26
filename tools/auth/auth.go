@@ -31,31 +31,40 @@ var (
 
 func (a *Auth) AuthenticateMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		jwtToken, err := a.getJWTFromHeader(c)
+		err := a.Authenticate(c)
 		if err != nil {
 			return helper.Forbidden(c, ErrNotAuthenticated.Error())
 		}
 
-		var dat interface{}
-		dat, err = a.jwtClient.Validate(jwtToken)
-		if err != nil {
-			return helper.Forbidden(c, ErrNotAuthenticated.Error())
-		}
-
-		user, ok := dat.(map[string]interface{})
-		if !ok {
-			return helper.Forbidden(c, ErrNotAuthenticated.Error())
-		}
-
-		var userID interface{}
-		userID, ok = user["id"]
-		if !ok {
-			return helper.Forbidden(c, ErrNotAuthenticated.Error())
-		}
-
-		helper.SetUserIDToContext(c, userID)
 		return next(c)
 	}
+}
+
+func (a *Auth) Authenticate(c echo.Context) error {
+	jwtToken, err := a.getJWTFromHeader(c)
+	if err != nil {
+		return ErrNotAuthenticated
+	}
+
+	var dat interface{}
+	dat, err = a.jwtClient.Validate(jwtToken)
+	if err != nil {
+		return ErrNotAuthenticated
+	}
+
+	user, ok := dat.(map[string]interface{})
+	if !ok {
+		return ErrNotAuthenticated
+	}
+
+	var userID interface{}
+	userID, ok = user["id"]
+	if !ok {
+		return ErrNotAuthenticated
+	}
+
+	helper.SetUserIDToContext(c, userID)
+	return nil
 }
 
 func (a *Auth) getJWTFromHeader(c echo.Context) (string, error) {

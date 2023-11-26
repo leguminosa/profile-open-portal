@@ -8,6 +8,7 @@ import (
 
 type AuthInterface interface {
 	AuthenticateMiddleware(next echo.HandlerFunc) echo.HandlerFunc
+	Authenticate(c echo.Context) error
 }
 
 type HashInterface interface {

@@ -34,6 +34,20 @@ func (m *MockAuthInterface) EXPECT() *MockAuthInterfaceMockRecorder {
 	return m.recorder
 }
 
+// Authenticate mocks base method.
+func (m *MockAuthInterface) Authenticate(c echo.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Authenticate", c)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Authenticate indicates an expected call of Authenticate.
+func (mr *MockAuthInterfaceMockRecorder) Authenticate(c interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockAuthInterface)(nil).Authenticate), c)
+}
+
 // AuthenticateMiddleware mocks base method.
 func (m *MockAuthInterface) AuthenticateMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	m.ctrl.T.Helper()

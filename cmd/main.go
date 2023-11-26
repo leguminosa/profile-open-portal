@@ -4,11 +4,27 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/leguminosa/profile-open-portal/core"
+	"github.com/labstack/echo/v4"
+	"github.com/leguminosa/profile-open-portal/generated"
+	"github.com/leguminosa/profile-open-portal/handler"
+	moduleUser "github.com/leguminosa/profile-open-portal/module/user"
+	repositoryUser "github.com/leguminosa/profile-open-portal/repository/user"
+	"github.com/leguminosa/profile-open-portal/tools/auth"
+	"github.com/leguminosa/profile-open-portal/tools/crxpto"
+	"github.com/leguminosa/profile-open-portal/tools/jwtx"
 	_ "github.com/lib/pq"
 )
 
 func main() {
+	e := echo.New()
+
+	server := newServer()
+	generated.RegisterHandlers(e, server)
+
+	e.Logger.Fatal(e.Start(":1323"))
+}
+
+func newServer() *handler.Server {
 	// get db connection string from environment variable
 	dbDsn := os.Getenv("DATABASE_URL")
 
@@ -33,6 +49,30 @@ func main() {
 		panic(err)
 	}
 
-	// init http server
-	core.NewServer(db, privKey, pubKey).Start()
+	// tools layer
+	hashClient := crxpto.NewBcrypt()
+	jwtClient := jwtx.NewSigningMethodRS256(jwtx.NewSigningMethodRS256Options{
+		PrivateKey: privKey,
+		PublicKey:  pubKey,
+	})
+	authClient := auth.New(auth.NewAuthOptions{
+		JWT: jwtClient,
+	})
+
+	// repository layer
+	userRepo := repositoryUser.New(repositoryUser.NewRepositoryOptions{
+		DB: db,
+	})
+
+	// module layer
+	userModule := moduleUser.New(moduleUser.NewUserModuleOptions{
+		UserRepository: userRepo,
+		Hash:           hashClient,
+		JWT:            jwtClient,
+	})
+
+	return handler.NewServer(handler.NewServerOptions{
+		UserModule: userModule,
+		Auth:       authClient,
+	})
 }
