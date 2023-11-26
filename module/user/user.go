@@ -122,3 +122,31 @@ func (m *UserModule) Login(ctx context.Context, user *entity.User) (entity.Login
 
 	return resp, nil
 }
+
+// GetProfile returns user profile.
+func (m *UserModule) GetProfile(ctx context.Context, userID int) (*entity.User, error) {
+	return m.userRepository.GetUserByID(ctx, userID)
+}
+
+// UpdateProfile only updates fullname and/or phone number if user input is not empty.
+func (m *UserModule) UpdateProfile(ctx context.Context, user *entity.User) error {
+	// get user to db first to check whether user exist
+	exist, err := m.userRepository.GetUserByID(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
+	if !exist.Exist() {
+		return errors.New("user not found")
+	}
+
+	// only update if user input is not empty
+	if user.Fullname != "" {
+		exist.Fullname = user.Fullname
+	}
+	if user.PhoneNumber != "" {
+		exist.PhoneNumber = user.PhoneNumber
+	}
+
+	return m.userRepository.UpdateUser(ctx, exist)
+}

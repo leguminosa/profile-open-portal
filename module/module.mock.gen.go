@@ -35,6 +35,21 @@ func (m *MockUserModuleInterface) EXPECT() *MockUserModuleInterfaceMockRecorder 
 	return m.recorder
 }
 
+// GetProfile mocks base method.
+func (m *MockUserModuleInterface) GetProfile(ctx context.Context, userID int) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProfile", ctx, userID)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProfile indicates an expected call of GetProfile.
+func (mr *MockUserModuleInterfaceMockRecorder) GetProfile(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfile", reflect.TypeOf((*MockUserModuleInterface)(nil).GetProfile), ctx, userID)
+}
+
 // Login mocks base method.
 func (m *MockUserModuleInterface) Login(ctx context.Context, user *entity.User) (entity.LoginModuleResponse, error) {
 	m.ctrl.T.Helper()
@@ -63,4 +78,18 @@ func (m *MockUserModuleInterface) Register(ctx context.Context, user *entity.Use
 func (mr *MockUserModuleInterfaceMockRecorder) Register(ctx, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUserModuleInterface)(nil).Register), ctx, user)
+}
+
+// UpdateProfile mocks base method.
+func (m *MockUserModuleInterface) UpdateProfile(ctx context.Context, user *entity.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateProfile", ctx, user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateProfile indicates an expected call of UpdateProfile.
+func (mr *MockUserModuleInterfaceMockRecorder) UpdateProfile(ctx, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProfile", reflect.TypeOf((*MockUserModuleInterface)(nil).UpdateProfile), ctx, user)
 }
