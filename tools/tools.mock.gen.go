@@ -8,7 +8,45 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	echo "github.com/labstack/echo/v4"
 )
+
+// MockAuthInterface is a mock of AuthInterface interface.
+type MockAuthInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockAuthInterfaceMockRecorder
+}
+
+// MockAuthInterfaceMockRecorder is the mock recorder for MockAuthInterface.
+type MockAuthInterfaceMockRecorder struct {
+	mock *MockAuthInterface
+}
+
+// NewMockAuthInterface creates a new mock instance.
+func NewMockAuthInterface(ctrl *gomock.Controller) *MockAuthInterface {
+	mock := &MockAuthInterface{ctrl: ctrl}
+	mock.recorder = &MockAuthInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAuthInterface) EXPECT() *MockAuthInterfaceMockRecorder {
+	return m.recorder
+}
+
+// AuthenticateMiddleware mocks base method.
+func (m *MockAuthInterface) AuthenticateMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AuthenticateMiddleware", next)
+	ret0, _ := ret[0].(echo.HandlerFunc)
+	return ret0
+}
+
+// AuthenticateMiddleware indicates an expected call of AuthenticateMiddleware.
+func (mr *MockAuthInterfaceMockRecorder) AuthenticateMiddleware(next interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateMiddleware", reflect.TypeOf((*MockAuthInterface)(nil).AuthenticateMiddleware), next)
+}
 
 // MockHashInterface is a mock of HashInterface interface.
 type MockHashInterface struct {
